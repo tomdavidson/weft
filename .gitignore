@@ -1,0 +1,25 @@
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+secrets/
+credentials/
+
+# IDE Settings (keep shared, ignore personal)
+.idea/workspace.xml
+
+# Language-specific ignores (add as needed)
+node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
+dist/
+build/
+
+# moon
+.moon/cache
+.moon/docker
+
+
+tmp

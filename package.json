@@ -10,6 +10,7 @@
     "check": "tsc --noEmit",
     "build": "bun build src/cli/index.ts --outfile dist/weft.mjs",
     "prepublishOnly": "bun run build",
+    "postinstall": "bun run build",
     "lint": "oxlint; eslint",
     "lint:ox": "oxlint",
     "lint:fp": "eslint",

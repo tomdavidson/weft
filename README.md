@@ -4,17 +4,58 @@ A template build tool that resolves Obsidian-style `![[transclusion]]` reference
 `{{variables}}` into flat output files. Designed for composing structured documents from reusable
 fragments with injectable context.
 
+## Why Weft
+
+Documentation and prompts share the same problem: they're assembled from reusable pieces with
+variable context injected at build time. Weft treats both as the same pipeline.
+
+For documentation, compose a full document from section fragments and inject dynamic content like
+generated tables of contents or version strings:
+
+```bash
+weft index.template.md index.md -c "toc=$(adrs generate toc)"
+```
+
+For prompt engineering, build complex system prompts from a library of reusable instruction
+fragments using transclusion. A prompt template can pull in shared persona definitions, tool
+schemas, and domain rules without copy-pasting:
+
+```markdown
+# System Prompt
+![[persona/senior-architect]]
+
+## Project Context
+![[rules/typescript-patterns]]
+![[rules/testing-patterns]]
+
+## Task
+{{task_description}}
+
+## Constraints
+![[constraints/token-budget]]
+![[constraints/output-format]]
+```
+
+```bash
+weft system-prompt.template.md -c task_description="Review the auth module for security issues"
+```
+
+Weft keeps source fragments single-purpose and composable. Changes to a shared fragment propagate
+everywhere it's referenced. Context injection means the same template structure works across
+projects, environments, and tasks.
+
 ## Features
 
-- **Transclusion resolution** using Obsidian `![[ref]]` syntax, including heading-section extraction
+- Transclusion resolution using Obsidian `![[ref]]` syntax, including heading-section extraction
   (`![[file#Section]]`)
-- **Mustache template rendering** with context from inline values, JSON files, and env files
-- **Two-tier path resolution** that checks the containing directory first, then falls back to the
+- Mustache template rendering with context from inline values, JSON files, and env files
+- Two-tier path resolution that checks the containing directory first, then falls back to the
   working directory
-- **Cycle detection** to prevent infinite loops in transclusion graphs
-- **Extension-aware escaping** with identity pass-through for Markdown/text and JSON-safe escaping
+- Cycle detection to prevent infinite loops in transclusion graphs
+- Extension-aware escaping with identity pass-through for Markdown/text and JSON-safe escaping
   for `.json` output
-- **Typed error handling** throughout using `neverthrow` Result types (no thrown exceptions)
+- Typed error handling throughout using `neverthrow` Result types (no thrown exceptions)
+- Output to file or stdout
 
 ## Installation
 
@@ -25,43 +66,56 @@ bun install
 ## Usage
 
 ```bash
-bun run src/cli/index.ts <entry-file> -o <output-file> [options]
+weft <entry-file> [output-file] [options]
 ```
+
+When no output file is given, rendered content is written to stdout.
 
 ### Options
 
-| Flag                    | Description                           |
-| ----------------------- | ------------------------------------- |
-| `-o`, `--output <path>` | Output file path (required)           |
-| `-c <key=value>`        | Inline context variable (repeatable)  |
-| `--json <path>`         | JSON file context source (repeatable) |
-| `--env <path>`          | Env file context source (repeatable)  |
-| `--cwd <path>`          | Working directory for path resolution |
+| Flag | Description |
+| --- | --- |
+| `-c <key=value>` | Inline context variable (repeatable) |
+| `--json <path>` | JSON file context source (repeatable) |
+| `--env <path>` | Env file context source (repeatable) |
+| `--cwd <path>` | Working directory for path resolution |
 
 ### Examples
 
 Simple transclusion build:
 
 ```bash
-bun run src/cli/index.ts doc.template.md -o dist/doc.md
+weft doc.template.md dist/doc.md
 ```
 
 With inline context variables:
 
 ```bash
-bun run src/cli/index.ts doc.template.md -o dist/doc.md -c title="My Document" -c author="Tom"
+weft doc.template.md dist/doc.md -c title="My Document" -c author="Tom"
 ```
 
 With a JSON context file and inline overrides:
 
 ```bash
-bun run src/cli/index.ts doc.template.md -o dist/doc.md --json context.json -c version=2.0
+weft doc.template.md dist/doc.md --json context.json -c version=2.0
 ```
 
 With an env file:
 
 ```bash
-bun run src/cli/index.ts config.template.json -o dist/config.json --env production.env
+weft config.template.json dist/config.json --env production.env
+```
+
+Render to stdout (pipe to another tool):
+
+```bash
+weft prompt.template.md -c model=claude | pbcopy
+```
+
+Render to stdout for inspection:
+
+```bash
+weft doc.template.md -c title="Draft"
 ```
 
 ## How It Works
@@ -82,15 +136,19 @@ The build pipeline executes four stages in sequence:
    `{{#section}}...{{/section}}`) against the merged context, with escaping appropriate to the
    output format.
 
+The build function returns the rendered content string. The CLI layer handles writing to a file or
+stdout.
+
 ## Transclusion Syntax
 
 Transclusions use Obsidian's embed syntax, distinguished from regular wikilinks by the `!` prefix:
 
 ```markdown
-![[filename]] # Embed entire file (extension auto-resolved: .md, .json, .txt) ![[filename.md]] #
-Embed with explicit extension ![[filename#Heading]] # Embed only the content under a specific
-heading ![[./relative/path]] # Explicit relative path (no CWD fallback) ![[sub/dir/file]] #
-Subdirectory path with two-tier resolution
+![[filename]]           # Embed entire file (extension auto-resolved: .md, .json, .txt)
+![[filename.md]]        # Embed with explicit extension
+![[filename#Heading]]   # Embed only the content under a specific heading
+![[./relative/path]]    # Explicit relative path (no CWD fallback)
+![[sub/dir/file]]       # Subdirectory path with two-tier resolution
 ```
 
 Regular wikilinks (`[[link]]` without `!`) are left untouched.
@@ -133,7 +191,7 @@ DB_PORT=5432
 
 ## Architecture
 
-weft follows a Hexagonal Architecture (Ports and Adapters) pattern:
+Weft follows a functional core / imperative shell architecture:
 
 ```
 src/
@@ -149,41 +207,34 @@ src/
 │   ├── ports.ts         FileSystem interface (the primary port)
 │   ├── load-graph.ts    Async file graph loader
 │   ├── resolve-context.ts  Async context resolver (reads files via port)
-│   └── build.ts         Pipeline orchestrator
+│   └── build.ts         Pipeline orchestrator (returns rendered string)
 ├── infrastructure/    Real adapter implementations
 │   └── node-fs.ts       Node.js/Bun filesystem adapter
-├── cli/               Entry point
+├── cli/               Entry point and I/O boundary
 │   ├── parse-args.ts    Argument parser
-│   └── index.ts         CLI main
+│   └── index.ts         CLI main (file write, stdout, exit codes)
 └── test/              Test infrastructure
     ├── helpers.ts       expectOk/expectErr test utilities
     └── fake-filesystem.ts  In-memory FileSystem for unit tests
 ```
 
-Key design decisions:
-
-- **Domain layer** is pure and synchronous (except `resolve.ts` which is sync over an in-memory
-  map). No I/O, no framework dependencies.
-- **Application layer** depends only on the `FileSystem` port interface, making it testable with the
-  in-memory fake.
+- **Domain layer** is pure and synchronous. No I/O, no framework dependencies.
+- **Application layer** depends only on the `FileSystem` port interface, returns content strings,
+  and performs no side effects. Testable with the in-memory fake.
+- **CLI layer** owns all I/O: argument parsing, file writes, stdout, and exit codes.
 - **All errors** are typed via the `WeftError` discriminated union and propagated through
   `neverthrow` `Result` types. Nothing is thrown.
-- **The `FileSystem` port** is the single boundary between the application and the outside world.
 
 ## Testing
-
-Run the full test suite:
 
 ```bash
 bun test
 ```
 
-The suite includes 147 tests across 13 files:
-
-- **Domain unit tests** use pure function calls with no mocks
-- **Application unit tests** use the in-memory `FakeFileSystem`
-- **Infrastructure tests** use real temp directories
-- **Integration tests** run the full `build` pipeline against real files
+- Domain unit tests use pure function calls with no mocks
+- Application unit tests use the in-memory `FakeFileSystem`
+- Integration tests run the full `build` pipeline against real files
+- CLI integration tests spawn the actual CLI process against temp directories
 
 Type checking:
 
@@ -193,23 +244,23 @@ bun run check
 
 ## Supported File Types
 
-| Extension | Template Escaping                        | Transclusion |
-| --------- | ---------------------------------------- | ------------ |
-| `.md`     | Identity (no escaping)                   | Yes          |
-| `.txt`    | Identity (no escaping)                   | Yes          |
-| `.json`   | JSON-safe (`\\`, `\"`, `\n`, `\r`, `\t`) | Yes          |
+| Extension | Template Escaping | Transclusion |
+| --- | --- | --- |
+| `.md` | Identity (no escaping) | Yes |
+| `.txt` | Identity (no escaping) | Yes |
+| `.json` | JSON-safe (`\\`, `\"`, `\n`, `\r`, `\t`) | Yes |
 
 ## Error Handling
 
 All errors are reported with specific types and context:
 
-| Error Type            | Description                                |
-| --------------------- | ------------------------------------------ |
-| `FileNotFound`        | Referenced file does not exist             |
-| `FileReadError`       | I/O error reading a file                   |
-| `CycleDetected`       | Circular transclusion reference chain      |
-| `ContextParseError`   | Invalid JSON or malformed context file     |
-| `TemplateRenderError` | Mustache rendering failure                 |
-| `InvalidArgs`         | Missing or malformed CLI arguments         |
-| `SectionNotFound`     | Heading not found for section transclusion |
-| `OutputWriteError`    | I/O error writing the output file          |
+| Error Type | Description |
+| --- | --- |
+| `FileNotFound` | Referenced file does not exist |
+| `FileReadError` | I/O error reading a file |
+| `CycleDetected` | Circular transclusion reference chain |
+| `ContextParseError` | Invalid JSON or malformed context file |
+| `TemplateRenderError` | Mustache rendering failure |
+| `InvalidArgs` | Missing or malformed CLI arguments |
+| `SectionNotFound` | Heading not found for section transclusion |
+| `OutputWriteError` | I/O error writing the output file |
