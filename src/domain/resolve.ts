@@ -4,7 +4,7 @@ import { dirname } from 'node:path'
 import { cycleDetected, fileNotFound, sectionNotFound } from '../domain/errors.js'
 import { extractSection, parseTransclusionRefs } from './parse-transclusion.js'
 import { resolveRefPath } from './resolve-path.js'
-import type { TransclusionRef, ZBuildError } from './types.js'
+import type { TransclusionRef, WeftError } from './types.js'
 
 export type ResolveInput = { readonly filename: string; readonly fileMap: ReadonlyMap<string, string> }
 
@@ -44,14 +44,14 @@ const applySectionIfNeeded = (
   inlined: string,
   ref: TransclusionRef,
   childPath: string,
-): Result<string, ZBuildError> => {
+): Result<string, WeftError> => {
   if (ref.section === undefined || ref.section === '' || inlined.length === 0) {
     return ok(inlined)
   }
   return extractSection(inlined, ref.section).mapErr(e => sectionNotFound(childPath, e.heading))
 }
 
-const resolveFile = (filePath: string, ctx: ResolveContext): Result<ResolveResult, ZBuildError> => {
+const resolveFile = (filePath: string, ctx: ResolveContext): Result<ResolveResult, WeftError> => {
   const content = ctx.fileMap.get(filePath)
   if (content === undefined) {
     return err(fileNotFound(filePath))
@@ -77,7 +77,7 @@ const resolveFile = (filePath: string, ctx: ResolveContext): Result<ResolveResul
   return inlineRefs({ content, filePath, refs }, innerCtx)
 }
 
-const resolveOneRef = (input: ResolveOneRefInput): Result<InlineAccumulator, ZBuildError> => {
+const resolveOneRef = (input: ResolveOneRefInput): Result<InlineAccumulator, WeftError> => {
   const { file, ctx, dir, acc, ref } = input
   const rawIndex = file.content.indexOf(ref.raw, acc.lastIndex)
   const prefix = file.content.slice(acc.lastIndex, rawIndex)
@@ -95,17 +95,17 @@ const resolveOneRef = (input: ResolveOneRefInput): Result<InlineAccumulator, ZBu
   )
 }
 
-const inlineRefs = (file: FileWithRefs, ctx: ResolveContext): Result<ResolveResult, ZBuildError> => {
+const inlineRefs = (file: FileWithRefs, ctx: ResolveContext): Result<ResolveResult, WeftError> => {
   const dir = dirname(file.filePath)
   const initial: InlineAccumulator = { result: '', lastIndex: 0, visited: ctx.visited }
 
-  return file.refs.reduce<Result<InlineAccumulator, ZBuildError>>(
+  return file.refs.reduce<Result<InlineAccumulator, WeftError>>(
     (accResult, ref) => accResult.andThen(acc => resolveOneRef({ file, ctx, dir, acc, ref })),
     ok(initial),
   ).map(acc => ({ content: acc.result + file.content.slice(acc.lastIndex), visited: acc.visited }))
 }
 
-export const resolveTransclusions = (input: ResolveInput, env: ResolveEnv): Result<string, ZBuildError> => {
+export const resolveTransclusions = (input: ResolveInput, env: ResolveEnv): Result<string, WeftError> => {
   const ctx: ResolveContext = {
     cwd: env.cwd,
     fileMap: input.fileMap,

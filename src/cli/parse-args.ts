@@ -1,7 +1,7 @@
 import { err, ok } from 'neverthrow'
 import type { Result } from 'neverthrow'
 import { extname } from 'node:path'
-import type { ContextSource, FilePath, SupportedExtension, ZBuildError } from '../domain/types.js'
+import type { ContextSource, FilePath, SupportedExtension, WeftError } from '../domain/types.js'
 import { SUPPORTED_EXTENSIONS } from '../domain/types.js'
 
 const FLAG_VALUE_STEP = 2
@@ -38,7 +38,7 @@ const detectExtension = (filename: string): SupportedExtension => {
   return isSupportedExtension(raw) ? raw : 'md'
 }
 
-const parseInlineContext = (pair: string | undefined): Result<ContextSource, ZBuildError> => {
+const parseInlineContext = (pair: string | undefined): Result<ContextSource, WeftError> => {
   if (pair === undefined) {
     return err({ type: 'InvalidArgs', message: 'Context flag -c requires key=value format' })
   }
@@ -51,7 +51,7 @@ const parseInlineContext = (pair: string | undefined): Result<ContextSource, ZBu
   return ok({ type: 'inline' as const, key: pair.slice(0, eqIdx), value: pair.slice(eqIdx + 1) })
 }
 
-const safeFilePath = (value: string | undefined): Result<FilePath, ZBuildError> => {
+const safeFilePath = (value: string | undefined): Result<FilePath, WeftError> => {
   if (value === undefined || value.length === 0) {
     return err({ type: 'InvalidArgs', message: 'Context file path is required' })
   }
@@ -66,7 +66,7 @@ const handleOutputFlag = (argv: readonly string[], state: ParserState): ParserSt
   index: state.index + FLAG_VALUE_STEP,
 })
 
-const handleContextFlag = (argv: readonly string[], state: ParserState): Result<ParserState, ZBuildError> => {
+const handleContextFlag = (argv: readonly string[], state: ParserState): Result<ParserState, WeftError> => {
   const result = parseInlineContext(argv[state.index + 1])
   if (result.isErr()) return err(result.error)
   return ok({
@@ -76,7 +76,7 @@ const handleContextFlag = (argv: readonly string[], state: ParserState): Result<
   })
 }
 
-const addJsonSource = (argv: readonly string[], state: ParserState): Result<ParserState, ZBuildError> => {
+const addJsonSource = (argv: readonly string[], state: ParserState): Result<ParserState, WeftError> => {
   const pathResult = safeFilePath(argv[state.index + 1])
   if (pathResult.isErr()) return err(pathResult.error)
 
@@ -87,7 +87,7 @@ const addJsonSource = (argv: readonly string[], state: ParserState): Result<Pars
   })
 }
 
-const addEnvSource = (argv: readonly string[], state: ParserState): Result<ParserState, ZBuildError> => {
+const addEnvSource = (argv: readonly string[], state: ParserState): Result<ParserState, WeftError> => {
   const pathResult = safeFilePath(argv[state.index + 1])
   if (pathResult.isErr()) return err(pathResult.error)
 
@@ -104,7 +104,7 @@ const handleCwdFlag = (argv: readonly string[], state: ParserState): ParserState
   index: state.index + FLAG_VALUE_STEP,
 })
 
-type FlagHandler = (argv: readonly string[], state: ParserState) => Result<ParserState, ZBuildError>
+type FlagHandler = (argv: readonly string[], state: ParserState) => Result<ParserState, WeftError>
 
 const FLAG_HANDLERS: Record<string, FlagHandler> = {
   '-o': (argv, state) => ok(handleOutputFlag(argv, state)),
@@ -118,7 +118,7 @@ const FLAG_HANDLERS: Record<string, FlagHandler> = {
 
 const getFlagHandler = (arg: string): FlagHandler | undefined => FLAG_HANDLERS[arg]
 
-const processArg = (argv: readonly string[], state: ParserState): Result<ParserState, ZBuildError> => {
+const processArg = (argv: readonly string[], state: ParserState): Result<ParserState, WeftError> => {
   const arg = argv[state.index]
   const handler = getFlagHandler(arg)
 
@@ -133,14 +133,14 @@ const processArg = (argv: readonly string[], state: ParserState): Result<ParserS
   return ok({ ...state, index: state.index + 1 })
 }
 
-const processArgs = (argv: readonly string[], state: ParserState): Result<ParserState, ZBuildError> => {
+const processArgs = (argv: readonly string[], state: ParserState): Result<ParserState, WeftError> => {
   if (state.index >= argv.length) return ok(state)
   const result = processArg(argv, state)
   if (result.isErr()) return result
   return processArgs(argv, result.value)
 }
 
-export const parseArgs = (argv: readonly string[]): Result<ParsedArgs, ZBuildError> => {
+export const parseArgs = (argv: readonly string[]): Result<ParsedArgs, WeftError> => {
   const result = processArgs(argv, INITIAL_STATE)
   if (result.isErr()) return err(result.error)
 

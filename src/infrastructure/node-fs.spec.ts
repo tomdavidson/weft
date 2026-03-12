@@ -8,7 +8,7 @@ let tempDir: string
 let fs: ReturnType<typeof createNodeFileSystem>
 
 beforeEach(async () => {
-  tempDir = await mkdtemp(join(tmpdir(), 'zbuild-test-'))
+  tempDir = await mkdtemp(join(tmpdir(), 'weft-test-'))
   fs = createNodeFileSystem()
 })
 

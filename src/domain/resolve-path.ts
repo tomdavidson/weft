@@ -2,7 +2,7 @@ import { err, ok } from 'neverthrow'
 import type { Result } from 'neverthrow'
 import { extname, resolve } from 'node:path'
 import { fileNotFound } from './errors.js'
-import type { TransclusionRef, ZBuildError } from './types.js'
+import type { TransclusionRef, WeftError } from './types.js'
 import { SUPPORTED_EXTENSIONS } from './types.js'
 
 export type ResolvePathEnv = {
@@ -26,7 +26,7 @@ const tryResolve = (base: string, target: string, fileExists: (p: string) => boo
   return matchedExt ? resolve(base, `${target}.${matchedExt}`) : undefined
 }
 
-export const resolveRefPath = (ref: TransclusionRef, env: ResolvePathEnv): Result<string, ZBuildError> => {
+export const resolveRefPath = (ref: TransclusionRef, env: ResolvePathEnv): Result<string, WeftError> => {
   const fromContaining = tryResolve(env.containingDir, ref.target, env.fileExists)
   if (fromContaining !== undefined) return ok(fromContaining)
 

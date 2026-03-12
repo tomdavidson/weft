@@ -1,6 +1,6 @@
 import { err, ok, Result } from 'neverthrow'
 import { mergeContexts } from '../domain/context.js'
-import type { ContextSource, ZBuildError } from '../domain/types.js'
+import type { ContextSource, WeftError } from '../domain/types.js'
 import type { FileSystem } from './ports.js'
 
 const NEWLINE = 10
@@ -31,8 +31,8 @@ const safeJsonParse = Result.fromThrowable(
 const isStringRecord = (value: unknown): value is Record<string, string> =>
   typeof value === 'object' && value !== null && Object.values(value).every(v => typeof v === 'string')
 
-const parseJsonContent = (content: string, path: string): Result<Record<string, string>, ZBuildError> =>
-  safeJsonParse(content).mapErr((cause): ZBuildError => ({
+const parseJsonContent = (content: string, path: string): Result<Record<string, string>, WeftError> =>
+  safeJsonParse(content).mapErr((cause): WeftError => ({
     type: 'ContextParseError',
     source: path,
     cause,
@@ -46,16 +46,16 @@ const parseJsonContent = (content: string, path: string): Result<Record<string, 
           source: path,
           cause: 'JSON is not an object with string values',
           message: `Context parse error (${path}): JSON is not an object with string values`,
-        } satisfies ZBuildError,
+        } satisfies WeftError,
       )
   )
 
 const accumulateFileSource =
   (fs: FileSystem) =>
   async (
-    accPromise: Promise<Result<ReadonlyMap<string, Record<string, string>>, ZBuildError>>,
+    accPromise: Promise<Result<ReadonlyMap<string, Record<string, string>>, WeftError>>,
     source: Extract<ContextSource, { readonly type: 'jsonFile' | 'envFile' }>,
-  ): Promise<Result<ReadonlyMap<string, Record<string, string>>, ZBuildError>> => {
+  ): Promise<Result<ReadonlyMap<string, Record<string, string>>, WeftError>> => {
     const acc = await accPromise
     if (acc.isErr()) return acc
 
@@ -70,8 +70,8 @@ const accumulateFileSource =
 const resolveFileSources = async (
   fileSources: readonly Extract<ContextSource, { readonly type: 'jsonFile' | 'envFile' }>[],
   fs: FileSystem,
-): Promise<Result<ReadonlyMap<string, Record<string, string>>, ZBuildError>> =>
-  fileSources.reduce<Promise<Result<ReadonlyMap<string, Record<string, string>>, ZBuildError>>>(
+): Promise<Result<ReadonlyMap<string, Record<string, string>>, WeftError>> =>
+  fileSources.reduce<Promise<Result<ReadonlyMap<string, Record<string, string>>, WeftError>>>(
     accumulateFileSource(fs),
     Promise.resolve(
       ok(new Map<string, Record<string, string>>() as ReadonlyMap<string, Record<string, string>>),
@@ -81,7 +81,7 @@ const resolveFileSources = async (
 export const resolveContext = async (
   sources: readonly ContextSource[],
   fs: FileSystem,
-): Promise<Result<Record<string, string>, ZBuildError>> => {
+): Promise<Result<Record<string, string>, WeftError>> => {
   const fileSources = sources.filter((
     s,
   ): s is Extract<ContextSource, { readonly type: 'jsonFile' | 'envFile' }> => s.type !== 'inline')

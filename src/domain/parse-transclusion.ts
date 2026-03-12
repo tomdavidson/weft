@@ -16,7 +16,7 @@ const toRef = (match: RegExpMatchArray): TransclusionRef => ({
 })
 
 export const parseTransclusionRefs = (content: string): readonly TransclusionRef[] =>
-  Array.from(content.matchAll(TRANSCLUSION_RE)).map(toRef)
+  [...content.matchAll(TRANSCLUSION_RE)].map(toRef)
 
 type ParsedHeading = { readonly level: number; readonly title: string }
 

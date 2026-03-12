@@ -3,7 +3,7 @@ import type { Result } from 'neverthrow'
 import { resolve } from 'node:path'
 import { fileNotFound } from '../domain/errors.js'
 import { parseTransclusionRefs } from '../domain/parse-transclusion.js'
-import { SUPPORTED_EXTENSIONS, type TransclusionRef, type ZBuildError } from '../domain/types.js'
+import { SUPPORTED_EXTENSIONS, type TransclusionRef, type WeftError } from '../domain/types.js'
 import type { FileSystem } from './ports.js'
 
 const BACKSLASH = 92
@@ -57,7 +57,7 @@ const resolveRefs = async (
   refs: readonly TransclusionRef[],
   ctx: RefContext,
   acc: readonly string[] = [],
-): Promise<Result<readonly string[], ZBuildError>> => {
+): Promise<Result<readonly string[], WeftError>> => {
   if (refs.length === 0) return ok(acc)
   const [head, ...tail] = refs
   const candidates = buildCandidates(head.target, ctx.containingDir, ctx.cwd)
@@ -67,13 +67,12 @@ const resolveRefs = async (
   return resolveRefs(tail, ctx, next)
 }
 
-// Sequential IO + ref resolution for a single file. Line count is structural, not complex.
- 
+// eslint-disable-next-line max-lines-per-function -- flat pipeline, no branching; length is from destructuring and object construction
 const processFile = async (
   current: string,
   state: GraphState,
   deps: GraphDeps,
-): Promise<Result<GraphState, ZBuildError>> => {
+): Promise<Result<GraphState, WeftError>> => {
   const { cwd, fs } = deps
   const readResult = await fs.readFile(current)
   if (readResult.isErr()) return err(readResult.error)
@@ -101,7 +100,7 @@ const processFile = async (
 const processQueue = async (
   state: GraphState,
   deps: GraphDeps,
-): Promise<Result<ReadonlyMap<string, string>, ZBuildError>> => {
+): Promise<Result<ReadonlyMap<string, string>, WeftError>> => {
   if (state.queue.length === 0) return ok(state.fileMap)
   const [current] = state.queue
   if (state.visited.has(current)) return processQueue({ ...state, queue: state.queue.slice(1) }, deps)
@@ -114,5 +113,5 @@ export const loadFileGraph = async (
   entryPath: string,
   _vaultRoot: string,
   deps: GraphDeps,
-): Promise<Result<ReadonlyMap<string, string>, ZBuildError>> =>
+): Promise<Result<ReadonlyMap<string, string>, WeftError>> =>
   processQueue({ queue: [entryPath], visited: new Set(), fileMap: new Map() }, deps)

@@ -1,4 +1,4 @@
-# @zflow/zbuild
+# @zflow/weft
 
 A template build tool that resolves Obsidian-style `![[transclusion]]` references and Mustache
 `{{variables}}` into flat output files. Designed for composing structured documents from reusable
@@ -133,12 +133,12 @@ DB_PORT=5432
 
 ## Architecture
 
-zbuild follows a Hexagonal Architecture (Ports and Adapters) pattern:
+weft follows a Hexagonal Architecture (Ports and Adapters) pattern:
 
 ```
 src/
 ├── domain/            Pure functions, no I/O
-│   ├── types.ts         Shared types (FilePath, ZBuildError, etc.)
+│   ├── types.ts         Shared types (FilePath, WeftError, etc.)
 │   ├── parse-transclusion.ts   Parse ![[ref]] syntax and extract sections
 │   ├── template.ts      Template file detection and output path derivation
 │   ├── resolve-path.ts  Two-tier path resolution with extension probing
@@ -166,7 +166,7 @@ Key design decisions:
   map). No I/O, no framework dependencies.
 - **Application layer** depends only on the `FileSystem` port interface, making it testable with the
   in-memory fake.
-- **All errors** are typed via the `ZBuildError` discriminated union and propagated through
+- **All errors** are typed via the `WeftError` discriminated union and propagated through
   `neverthrow` `Result` types. Nothing is thrown.
 - **The `FileSystem` port** is the single boundary between the application and the outside world.
 

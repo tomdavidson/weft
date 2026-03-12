@@ -2,7 +2,7 @@ import { ResultAsync } from 'neverthrow'
 import type { Result } from 'neverthrow'
 import { renderTemplate } from '../domain/render.js'
 import { resolveTransclusions } from '../domain/resolve.js'
-import type { ContextSource, SupportedExtension, ZBuildError } from '../domain/types.js'
+import type { ContextSource, SupportedExtension, WeftError } from '../domain/types.js'
 import { renderWithMustache } from '../infrastructure/mustache-adapter.js'
 import { loadFileGraph } from './load-graph.js'
 import type { FileSystem } from './ports.js'
@@ -19,7 +19,7 @@ export type BuildOptions = {
 type BuildContext = Record<string, string>
 type FileGraph = ReadonlyMap<string, string>
 
-export const build = async (options: BuildOptions, fs: FileSystem): Promise<Result<string, ZBuildError>> => {
+export const build = async (options: BuildOptions, fs: FileSystem): Promise<Result<string, WeftError>> => {
   const { entryPath, outputPath, contextSources, cwd, ext } = options
 
   return new ResultAsync(resolveContext(contextSources, fs)).andThen((context: BuildContext) =>

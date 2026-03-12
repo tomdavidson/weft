@@ -16,7 +16,7 @@ export type ContextSource = { readonly type: 'inline'; readonly key: string; rea
   readonly path: FilePath
 } | { readonly type: 'envFile'; readonly path: FilePath }
 
-export type ZBuildError = // revert
+export type WeftError = // revert
   | { readonly type: 'FileNotFound'; readonly path: string; readonly message: string }
   | {
     readonly type: 'FileReadError'

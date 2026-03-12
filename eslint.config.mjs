@@ -136,7 +136,13 @@ const config = [
   },
 
   // Domain purity: ban IO imports
-  { files: domainFiles, rules: { 'no-restricted-imports': ['error', domainImportBans] } },
+  {
+    files: domainFiles,
+    rules: {
+      'no-restricted-imports': ['error', domainImportBans],
+      'functional/prefer-readonly-type': 'error',
+    },
+  },
 
   // Tests: fully relax FP rules
   {

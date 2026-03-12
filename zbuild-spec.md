@@ -28,7 +28,7 @@
 | Model                    | Unique Finding                                                      | Why It Matters                                           |
 | :----------------------- | :------------------------------------------------------------------ | :------------------------------------------------------- |
 | Claude Opus 4.6 Thinking | Task 14: E2E smoke test via `Bun.spawn` executing the actual binary | Validates the full wired system, not just units          |
-| Claude Opus 4.6 Thinking | `shebang` + `package.json` `bin` field for CLI installation         | Makes `zbuild` installable as a proper CLI tool          |
+| Claude Opus 4.6 Thinking | `shebang` + `package.json` `bin` field for CLI installation         | Makes `weft` installable as a proper CLI tool            |
 | Gemini 3.1 Pro Thinking  | Separate "Path Resolution" as its own task (Task 4)                 | Isolates the two-tier fallback logic for focused testing |
 
 ## Comprehensive Analysis
@@ -45,7 +45,7 @@ explicit function signatures for every pure function, a complete folder structur
 and 14 tasks each with precise definitions of done including specific test assertions. Gemini 3.1
 Pro Thinking and Kimi K2.5 Thinking produced solid architectural overviews but with less
 implementation-ready detail. Since your requirement is a spec doc that "provides all the context and
-info needed for zbuild to be built," Claude's output is the most complete.
+info needed for weft to be built," Claude's output is the most complete.
 
 On **escape function selection**, Claude Opus 4.6 Thinking is the only model that correctly
 implemented your decision to use identity escape for markdown/text and json escape for JSON output,
@@ -68,7 +68,7 @@ For the **directory mode** question, Claude includes it as a first-class feature
 "Future/Optional." Given that you explicitly listed "Directory mode support: First-class with
 deriveOutputPath" in your decisions, Claude's inclusion is correct.
 
-**Recommendation**: Use Claude Opus 4.6 Thinking's specification as your zbuild-spec.md. It is the
+**Recommendation**: Use Claude Opus 4.6 Thinking's specification as your weft-spec.md. It is the
 most complete, correctly implements all your stated decisions (especially the escape function
 selection and directory mode), provides implementation-ready type definitions and function
 signatures, and has the most granular task breakdown (14 tasks) with precise definitions of done.
@@ -84,14 +84,14 @@ Claude Opus 4.6 Thinking's spec as the base with targeted improvements.
 
 ---
 
-# zbuild Specification v1.0
+# weft Specification v1.0
 
 ## 1. Overview
 
-zbuild is a file assembly CLI tool that composes text files using Obsidian-style wikilink
-transclusion (`![[filename]]`) and Mustache template variable interpolation (`{{variable}}`). It
-processes markdown, JSON, and plain text inputs. zbuild is a **general-purpose tool**—it has no
-knowledge of prompt architectures, layer contracts, or any specific project structure.
+weft is a file assembly CLI tool that composes text files using Obsidian-style wikilink transclusion
+(`![[filename]]`) and Mustache template variable interpolation (`{{variable}}`). It processes
+markdown, JSON, and plain text inputs. weft is a **general-purpose tool**—it has no knowledge of
+prompt architectures, layer contracts, or any specific project structure.
 
 ## 2. Bill of Materials
 
@@ -126,7 +126,7 @@ knowledge of prompt architectures, layer contracts, or any specific project stru
 ## 3. CLI Interface
 
 ```
-zbuild <input> <output> [--context <value>]...
+weft <input> <output> [--context <value>]...
 ```
 
 ### Positional Arguments
@@ -155,11 +155,11 @@ Multiple `--context` flags merge left-to-right. Later values overwrite earlier f
 
 ### Directory Mode
 
-When input is a directory, zbuild discovers all `*.template.{ext}` files and processes each. Output
+When input is a directory, weft discovers all `*.template.{ext}` files and processes each. Output
 paths mirror input structure with `.template` stripped:
 
 ```
-zbuild templates/ dist/
+weft templates/ dist/
 # templates/index.template.md → dist/index.md
 # templates/sub/page.template.md → dist/sub/page.md
 ```
@@ -289,7 +289,7 @@ type ContextSource = { readonly type: 'inline'; readonly key: string; readonly v
   readonly path: FilePath
 } | { readonly type: 'envFile'; readonly path: FilePath }
 
-type ZBuildError =
+type WeftError =
   | { readonly type: 'FileNotFound'; readonly path: string }
   | { readonly type: 'FileReadError'; readonly path: string; readonly cause: string }
   | { readonly type: 'CycleDetected'; readonly chain: readonly string[] }
@@ -302,19 +302,19 @@ type ZBuildError =
 
 **Pure Functions**:
 
-| Function                | File                    | Signature                                                                                                                           |
-| :---------------------- | :---------------------- | :---------------------------------------------------------------------------------------------------------------------------------- |
-| `parseTransclusionRefs` | `parse-transclusion.ts` | `(content: string) => TransclusionRef[]`                                                                                            |
-| `extractSection`        | `parse-transclusion.ts` | `(content: string, heading: string) => Result<string, ZBuildError>`                                                                 |
-| `resolveRefPath`        | `resolve-path.ts`       | `(ref: TransclusionRef, containingDir: string, cwd: string, fileExists: (p: string) => boolean) => Result<string, ZBuildError>`     |
-| `classifyContextSource` | `context.ts`            | `(raw: string) => ContextSource`                                                                                                    |
-| `mergeContexts`         | `context.ts`            | `(sources: ContextSource[], resolved: Map<string, Record<string, string>>) => Record<string, string>`                               |
-| `isTemplateFile`        | `template.ts`           | `(filename: string) => boolean`                                                                                                     |
-| `deriveOutputPath`      | `template.ts`           | `(templatePath: string, inputBase: string, outputBase: string) => string`                                                           |
-| `getOutputExtension`    | `template.ts`           | `(filename: string) => SupportedExtension \| undefined`                                                                             |
-| `selectEscapeFunction`  | `render.ts`             | `(ext: SupportedExtension) => (text: string) => string`                                                                             |
-| `renderTemplate`        | `render.ts`             | `(content: string, context: Record<string, string>, ext: SupportedExtension) => Result<string, ZBuildError>`                        |
-| `resolveTransclusions`  | `resolve.ts`            | `(filename: string, fileMap: ReadonlyMap<string, string>, visited: Set<string>, stack: Set<string>) => Result<string, ZBuildError>` |
+| Function                | File                    | Signature                                                                                                                         |
+| :---------------------- | :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------- |
+| `parseTransclusionRefs` | `parse-transclusion.ts` | `(content: string) => TransclusionRef[]`                                                                                          |
+| `extractSection`        | `parse-transclusion.ts` | `(content: string, heading: string) => Result<string, WeftError>`                                                                 |
+| `resolveRefPath`        | `resolve-path.ts`       | `(ref: TransclusionRef, containingDir: string, cwd: string, fileExists: (p: string) => boolean) => Result<string, WeftError>`     |
+| `classifyContextSource` | `context.ts`            | `(raw: string) => ContextSource`                                                                                                  |
+| `mergeContexts`         | `context.ts`            | `(sources: ContextSource[], resolved: Map<string, Record<string, string>>) => Record<string, string>`                             |
+| `isTemplateFile`        | `template.ts`           | `(filename: string) => boolean`                                                                                                   |
+| `deriveOutputPath`      | `template.ts`           | `(templatePath: string, inputBase: string, outputBase: string) => string`                                                         |
+| `getOutputExtension`    | `template.ts`           | `(filename: string) => SupportedExtension \| undefined`                                                                           |
+| `selectEscapeFunction`  | `render.ts`             | `(ext: SupportedExtension) => (text: string) => string`                                                                           |
+| `renderTemplate`        | `render.ts`             | `(content: string, context: Record<string, string>, ext: SupportedExtension) => Result<string, WeftError>`                        |
+| `resolveTransclusions`  | `resolve.ts`            | `(filename: string, fileMap: ReadonlyMap<string, string>, visited: Set<string>, stack: Set<string>) => Result<string, WeftError>` |
 
 ### Application Layer (Orchestration)
 
@@ -322,9 +322,9 @@ type ZBuildError =
 
 ```typescript
 type FileSystem = {
-  readFile: (path: string) => Promise<Result<string, ZBuildError>>
-  writeFile: (path: string, content: string) => Promise<Result<void, ZBuildError>>
-  listFiles: (directory: string, pattern: RegExp) => Promise<Result<string[], ZBuildError>>
+  readFile: (path: string) => Promise<Result<string, WeftError>>
+  writeFile: (path: string, content: string) => Promise<Result<void, WeftError>>
+  listFiles: (directory: string, pattern: RegExp) => Promise<Result<string[], WeftError>>
   exists: (path: string) => Promise<boolean>
   resolve: (...segments: string[]) => string
   dirname: (path: string) => string
@@ -351,7 +351,7 @@ type FileSystem = {
 ### Folder Structure
 
 ```
-zbuild/
+weft/
 ├── src/
 │   ├── domain/
 │   │   ├── types.ts
@@ -392,7 +392,7 @@ zbuild/
 │       └── filesystem-contract.ts
 ├── package.json
 ├── tsconfig.json
-└── zbuild-spec.md
+└── weft-spec.md
 ```
 
 ## 8. Test Infrastructure
@@ -424,10 +424,10 @@ Minimal valid defaults for domain types. Override only what the test cares about
 
 **Execution protocol for every task:**
 
-1. Read `zbuild-spec.md` (this document) at the start of the task for full context.
+1. Read `weft-spec.md` (this document) at the start of the task for full context.
 2. Write unit tests first that accurately reflect the definition of done.
 3. Write application code to pass those tests.
-4. Run tests via `cd $(git rev-parse --show-toplevel)/zbuild && bun test src/<filename>.spec.ts`
+4. Run tests via `cd $(git rev-parse --show-toplevel)/weft && bun test src/<filename>.spec.ts`
 5. Evaluate if the full definition of done is satisfied. If yes, mark done. If not, repeat from
    step 3.
 
@@ -444,14 +444,14 @@ Minimal valid defaults for domain types. Override only what the test cares about
 - [ ] `bun install` succeeds with neverthrow, mustache, bun-types, typescript, fast-check,
       @types/mustache
 - [ ] `types.ts` exports: `FilePath`, `SupportedExtension`, `SUPPORTED_EXTENSIONS`,
-      `TransclusionRef`, `ContextSource`, `ZBuildError`
+      `TransclusionRef`, `ContextSource`, `WeftError`
 - [ ] `ports.ts` exports the `FileSystem` port interface
 - [ ] `helpers.spec.ts` passes: `expectOk` returns value on Ok, `expectErr` returns error on Err,
       both throw on wrong rail
 - [ ] `fake-filesystem.ts` compiles and exports `createFakeFileSystem`
 - [ ] `builders.ts` exports builders for `TransclusionRef`, `ContextSource`
 
-**Test**: `cd $(git rev-parse --show-toplevel)/zbuild && bun test src/test/helpers.spec.ts`
+**Test**: `cd $(git rev-parse --show-toplevel)/weft && bun test src/test/helpers.spec.ts`
 
 ---
 
@@ -474,7 +474,7 @@ Minimal valid defaults for domain types. Override only what the test cares about
 - [ ] `extractSection` is case-insensitive on heading text
 
 **Test**:
-`cd $(git rev-parse --show-toplevel)/zbuild && bun test src/domain/parse-transclusion.spec.ts`
+`cd $(git rev-parse --show-toplevel)/weft && bun test src/domain/parse-transclusion.spec.ts`
 
 ---
 
@@ -495,7 +495,7 @@ Minimal valid defaults for domain types. Override only what the test cares about
 - [ ] `getOutputExtension("data.template.json")` → `"json"`
 - [ ] `getOutputExtension("index.md")` → `undefined`
 
-**Test**: `cd $(git rev-parse --show-toplevel)/zbuild && bun test src/domain/template.spec.ts`
+**Test**: `cd $(git rev-parse --show-toplevel)/weft && bun test src/domain/template.spec.ts`
 
 ---
 
@@ -514,7 +514,7 @@ Minimal valid defaults for domain types. Override only what the test cares about
 - [ ] Returns `FileNotFound` when no match in either tier
 - [ ] `fileExists` predicate passed in (pure function, no IO)
 
-**Test**: `cd $(git rev-parse --show-toplevel)/zbuild && bun test src/domain/resolve-path.spec.ts`
+**Test**: `cd $(git rev-parse --show-toplevel)/weft && bun test src/domain/resolve-path.spec.ts`
 
 ---
 
@@ -533,7 +533,7 @@ Minimal valid defaults for domain types. Override only what the test cares about
 - [ ] `mergeContexts` merges left-to-right, later overwrites earlier
 - [ ] `mergeContexts` with empty list returns `{}`
 
-**Test**: `cd $(git rev-parse --show-toplevel)/zbuild && bun test src/domain/context.spec.ts`
+**Test**: `cd $(git rev-parse --show-toplevel)/weft && bun test src/domain/context.spec.ts`
 
 ---
 
@@ -554,7 +554,7 @@ Minimal valid defaults for domain types. Override only what the test cares about
 - [ ] `renderTemplate("{{missing}}", {}, "md")` → `Ok("")`
 - [ ] Section blocks work: `{{#show}}visible{{/show}}` with `{ show: "yes" }`
 
-**Test**: `cd $(git rev-parse --show-toplevel)/zbuild && bun test src/domain/render.spec.ts`
+**Test**: `cd $(git rev-parse --show-toplevel)/weft && bun test src/domain/render.spec.ts`
 
 ---
 
@@ -575,7 +575,7 @@ Minimal valid defaults for domain types. Override only what the test cares about
 - [ ] Non-transclusion `[[file]]` links not modified
 - [ ] Uses `resolveRefPath` from Task 4 for path resolution
 
-**Test**: `cd $(git rev-parse --show-toplevel)/zbuild && bun test src/domain/resolve.spec.ts`
+**Test**: `cd $(git rev-parse --show-toplevel)/weft && bun test src/domain/resolve.spec.ts`
 
 ---
 
@@ -594,8 +594,7 @@ Minimal valid defaults for domain types. Override only what the test cares about
 - [ ] Path resolution uses two-tier fallback (containing dir, then CWD)
 - [ ] All tests use `FakeFileSystem`
 
-**Test**:
-`cd $(git rev-parse --show-toplevel)/zbuild && bun test src/application/load-graph.spec.ts`
+**Test**: `cd $(git rev-parse --show-toplevel)/weft && bun test src/application/load-graph.spec.ts`
 
 ---
 
@@ -615,7 +614,7 @@ Minimal valid defaults for domain types. Override only what the test cares about
 - [ ] All tests use `FakeFileSystem`
 
 **Test**:
-`cd $(git rev-parse --show-toplevel)/zbuild && bun test src/application/resolve-context.spec.ts`
+`cd $(git rev-parse --show-toplevel)/weft && bun test src/application/resolve-context.spec.ts`
 
 ---
 
@@ -629,11 +628,10 @@ Minimal valid defaults for domain types. Override only what the test cares about
 - [ ] Template with `![[child]]` + context → transclusion resolved before mustache
 - [ ] Full pipeline: transclusion + mustache produces correct output
 - [ ] Output written to specified path via FileSystem port
-- [ ] Errors from any stage propagate as correct `ZBuildError` variant
+- [ ] Errors from any stage propagate as correct `WeftError` variant
 - [ ] All tests use `FakeFileSystem`, verify via `fake.written`
 
-**Test**:
-`cd $(git rev-parse --show-toplevel)/zbuild && bun test src/application/build-file.spec.ts`
+**Test**: `cd $(git rev-parse --show-toplevel)/weft && bun test src/application/build-file.spec.ts`
 
 ---
 
@@ -652,7 +650,7 @@ Minimal valid defaults for domain types. Override only what the test cares about
 - [ ] All tests use `FakeFileSystem`
 
 **Test**:
-`cd $(git rev-parse --show-toplevel)/zbuild && bun test src/application/build-directory.spec.ts`
+`cd $(git rev-parse --show-toplevel)/weft && bun test src/application/build-directory.spec.ts`
 
 ---
 
@@ -670,9 +668,9 @@ Minimal valid defaults for domain types. Override only what the test cares about
 - [ ] `parseCliArgs(["-v"])` → version variant
 - [ ] `parseCliArgs([])` → `InvalidArgs` error
 - [ ] `parseCliArgs(["input.template.md"])` → `InvalidArgs` error
-- [ ] `formatError` produces readable stderr for each `ZBuildError` variant
+- [ ] `formatError` produces readable stderr for each `WeftError` variant
 
-**Test**: `cd $(git rev-parse --show-toplevel)/zbuild && bun test src/infrastructure/cli.spec.ts`
+**Test**: `cd $(git rev-parse --show-toplevel)/weft && bun test src/infrastructure/cli.spec.ts`
 
 ---
 
@@ -691,9 +689,9 @@ Minimal valid defaults for domain types. Override only what the test cares about
 - [ ] `node-filesystem.integration.spec.ts` passes all contract tests with temp dir
 
 **Test (fast)**:
-`cd $(git rev-parse --show-toplevel)/zbuild && bun test src/test/fake-filesystem.spec.ts` **Test
+`cd $(git rev-parse --show-toplevel)/weft && bun test src/test/fake-filesystem.spec.ts` **Test
 (slow)**:
-`cd $(git rev-parse --show-toplevel)/zbuild && bun test src/infrastructure/node-filesystem.integration.spec.ts`
+`cd $(git rev-parse --show-toplevel)/weft && bun test src/infrastructure/node-filesystem.integration.spec.ts`
 
 ---
 
@@ -736,7 +734,7 @@ Minimal valid defaults for domain types. Override only what the test cares about
 - [ ] Exit code 1 + stderr message on missing input
 - [ ] Temp dir cleaned up in afterEach
 
-**Test**: `cd $(git rev-parse --show-toplevel)/zbuild && bun test src/main.integration.spec.ts`
+**Test**: `cd $(git rev-parse --show-toplevel)/weft && bun test src/main.integration.spec.ts`
 <span style="display:none">[^6][^7]</span>
 
 <div align="center">⁂</div>

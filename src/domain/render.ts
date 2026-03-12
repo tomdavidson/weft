@@ -1,5 +1,5 @@
 import type { Result } from 'neverthrow'
-import type { SupportedExtension, ZBuildError } from './types.js'
+import type { SupportedExtension, WeftError } from './types.js'
 
 const identityEscape = (text: string): string => text
 
@@ -22,9 +22,9 @@ export type RenderFn = (
   template: string,
   view: Record<string, string>,
   escapeFn: (text: string) => string,
-) => Result<string, ZBuildError>
+) => Result<string, WeftError>
 
 export const renderTemplate =
   (render: RenderFn) =>
-  (content: string, context: Record<string, string>, ext: SupportedExtension): Result<string, ZBuildError> =>
+  (content: string, context: Record<string, string>, ext: SupportedExtension): Result<string, WeftError> =>
     render(content, context, selectEscapeFunction(ext))

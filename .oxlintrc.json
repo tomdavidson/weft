@@ -94,6 +94,8 @@
     "no-array-constructor": "error",
     // Perf+immutability footguns
     "oxc/no-accumulating-spread": "warn",
+    // Spread over Object.assign
+    "unicorn/prefer-spread": "warn",
     // ─────────────────────────────────────────────────────────────
     // NO NULLS / OPTION-ISH STYLE
     // ─────────────────────────────────────────────────────────────
@@ -123,7 +125,7 @@
       }
     ],
     "typescript/no-misused-promises": "error",
-    "typescript/promise-function-async": "error",
+    "typescript/promise-function-async": "off",
     "typescript/return-await": "error",
     "unicorn/no-await-in-promise-methods": "error",
     "unicorn/no-single-promise-in-promise-methods": "error",
@@ -132,8 +134,9 @@
     "promise/no-new-statics": "error",
     "promise/no-multiple-resolved": "warn",
     "promise/valid-params": "error",
-    // (Optional, opinionated; consider enabling if it matches your async guideline)
-    // "no-await-in-loop": "warn",
+    // Supports ResultAsync-first stance: loops should use ResultAsync.combine
+    // or similar, not sequential awaits.
+    "no-await-in-loop": "warn",
     // ─────────────────────────────────────────────────────────────
     // TYPE SAFETY / UNION EXHAUSTIVENESS
     // ─────────────────────────────────────────────────────────────
@@ -149,6 +152,11 @@
     "typescript/no-non-null-assertion": "warn",
     "typescript/no-unnecessary-type-assertion": "warn",
     "typescript/no-unnecessary-type-arguments": "warn",
+    // Discriminated unions over interfaces: enforce `type` keyword
+    "typescript/consistent-type-definitions": [
+      "error",
+      "type"
+    ],
     // Keep TS escape hatches honest
     "typescript/ban-ts-comment": [
       "warn",
@@ -248,7 +256,9 @@
     "unicorn/prefer-ternary": [
       "warn",
       "only-single-line"
-    ]
+    ],
+    // Positive predicates: prefer `if (ready)` over `if (!notReady)`
+    "unicorn/no-negated-condition": "warn"
   },
   "overrides": [
     {

@@ -1,9 +1,9 @@
 import Mustache from 'mustache'
 import { Result } from 'neverthrow'
 import { templateRenderError } from '../domain/errors.js'
-import type { ZBuildError } from '../domain/types.js'
+import type { WeftError } from '../domain/types.js'
 
-const toRenderError = (e: unknown): ZBuildError =>
+const toRenderError = (e: unknown): WeftError =>
   templateRenderError('-unknown path-', e instanceof Error ? e.message : String(e))
 
 const withEscapeFn = <T>(escapeFn: (text: string) => string, fn: () => T): T => {
@@ -20,5 +20,5 @@ export const renderWithMustache = (
   template: string,
   view: Record<string, string>,
   escapeFn: (text: string) => string,
-): Result<string, ZBuildError> =>
+): Result<string, WeftError> =>
   withEscapeFn(escapeFn, () => Result.fromThrowable(() => Mustache.render(template, view), toRenderError)())

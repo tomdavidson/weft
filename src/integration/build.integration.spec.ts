@@ -10,7 +10,7 @@ let tempDir: string
 const fs = createNodeFileSystem()
 
 beforeEach(async () => {
-  tempDir = await mkdtemp(join(tmpdir(), 'zbuild-integration-'))
+  tempDir = await mkdtemp(join(tmpdir(), 'weft-integration-'))
 })
 
 afterEach(async () => {

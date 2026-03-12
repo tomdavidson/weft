@@ -1,14 +1,14 @@
 {
-  "name": "@zflow/zbuild",
+  "name": "@zflow/weft",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "bin": {
-    "zbuild": "./src/cli/index.ts"
+    "weft": "./src/cli/index.ts"
   },
   "scripts": {
     "check": "tsc --noEmit",
-    "build": "bun build src/cli/index.ts --compile --outfile zbuild",
+    "build": "bun build src/cli/index.ts --compile --outfile weft",
     "lint": "oxlint;  eslint",
     "lint:ox": "oxlint",
     "lint:fp": "eslint -c eslint.config.mjs",
