@@ -71,10 +71,11 @@ describe('parseArgs', () => {
     expect(error.type).toBe('InvalidArgs')
   })
 
-  it('returns InvalidArgs when output is missing', () => {
+  it('defaults output to undefined when not provided', () => {
     const result = parseArgs(['entry.md'])
-    const error = expectErr(result)
-    expect(error.type).toBe('InvalidArgs')
+    const args = expectOk(result)
+    expect(args.outputPath).toBeUndefined()
+    expect(args.ext).toBe('md')
   })
 
   it('returns InvalidArgs for -c without equals sign', () => {

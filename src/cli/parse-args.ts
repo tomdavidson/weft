@@ -8,7 +8,7 @@ const FLAG_VALUE_STEP = 2
 
 export type ParsedArgs = {
   readonly entryPath: string
-  readonly outputPath: string
+  readonly outputPath: string | undefined
   readonly contextSources: readonly ContextSource[]
   readonly cwd: string
   readonly ext: SupportedExtension
@@ -130,6 +130,10 @@ const processArg = (argv: readonly string[], state: ParserState): Result<ParserS
     return ok({ ...state, entryPath: arg, index: state.index + 1 })
   }
 
+  if (state.outputPath === undefined) {
+    return ok({ ...state, outputPath: arg, index: state.index + 1 })
+  }
+
   return ok({ ...state, index: state.index + 1 })
 }
 
@@ -150,15 +154,11 @@ export const parseArgs = (argv: readonly string[]): Result<ParsedArgs, WeftError
     return err({ type: 'InvalidArgs', message: 'Missing entry file path' })
   }
 
-  if (outputPath === undefined) {
-    return err({ type: 'InvalidArgs', message: 'Missing output path (-o)' })
-  }
-
   return ok({
     entryPath,
     outputPath,
     contextSources,
     cwd: cwd ?? process.cwd(),
-    ext: detectExtension(outputPath),
+    ext: detectExtension(outputPath ?? entryPath),
   })
 }

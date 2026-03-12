@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { build } from '../application/build.js'
 import { toFilePath } from '../domain/types.js'
 import { createNodeFileSystem } from '../infrastructure/node-fs.js'
+import { expectOk } from '../test/helpers.js'
 
 let tempDir: string
 const fs = createNodeFileSystem()
@@ -19,7 +20,6 @@ afterEach(async () => {
 
 const write = async (name: string, content: string) => writeFile(join(tempDir, name), content, 'utf-8')
 
-const read = async (name: string) => readFile(join(tempDir, name), 'utf-8')
 
 describe('Integration: build pipeline', () => {
   it('single file with no transclusions, no context', async () => {
@@ -31,8 +31,8 @@ describe('Integration: build pipeline', () => {
       cwd: tempDir,
       ext: 'md',
     }, fs)
-    expect(result.isOk()).toBe(true)
-    expect(await read('out.md')).toBe('Hello world')
+    const content = expectOk(result)
+    expect(content).toBe('Hello world')
   })
 
   it('single file with template variables from inline context', async () => {
@@ -48,8 +48,8 @@ describe('Integration: build pipeline', () => {
       cwd: tempDir,
       ext: 'md',
     }, fs)
-    expect(result.isOk()).toBe(true)
-    expect(await read('out.md')).toBe('Hello Tom, you are admin.')
+    const content = expectOk(result)
+    expect(content).toBe('Hello Tom, you are admin.')
   })
 
   it('transclusion of a child file', async () => {
@@ -62,8 +62,8 @@ describe('Integration: build pipeline', () => {
       cwd: tempDir,
       ext: 'md',
     }, fs)
-    expect(result.isOk()).toBe(true)
-    expect(await read('out.md')).toBe('Before CHILD After')
+    const content = expectOk(result)
+    expect(content).toBe('Before CHILD After')
   })
 
   it('chained transclusions with template rendering', async () => {
@@ -84,8 +84,7 @@ describe('Integration: build pipeline', () => {
       cwd: tempDir,
       ext: 'md',
     }, fs)
-    expect(result.isOk()).toBe(true)
-    const output = await read('out.md')
+    const output = expectOk(result)
     expect(output).toContain('Title: My Doc')
     expect(output).toContain('Author: Tom')
   })
@@ -104,8 +103,8 @@ describe('Integration: build pipeline', () => {
       cwd: tempDir,
       ext: 'md',
     }, fs)
-    expect(result.isOk()).toBe(true)
-    expect(await read('out.md')).toBe('Hello Tom')
+    const content = expectOk(result)
+    expect(content).toBe('Hello Tom')
   })
 
   it('context from env file', async () => {
@@ -118,8 +117,8 @@ describe('Integration: build pipeline', () => {
       cwd: tempDir,
       ext: 'md',
     }, fs)
-    expect(result.isOk()).toBe(true)
-    expect(await read('out.md')).toBe('Host: localhost, Port: 5432')
+    const content = expectOk(result)
+    expect(content).toBe('Host: localhost, Port: 5432')
   })
 
   it('transclusion in subdirectory resolves relative paths', async () => {
@@ -133,8 +132,8 @@ describe('Integration: build pipeline', () => {
       cwd: tempDir,
       ext: 'md',
     }, fs)
-    expect(result.isOk()).toBe(true)
-    expect(await read('out.md')).toBe('from sub')
+    const content = expectOk(result)
+    expect(content).toBe('from sub')
   })
 
   it('diamond dependency resolves correctly', async () => {
@@ -149,8 +148,7 @@ describe('Integration: build pipeline', () => {
       cwd: tempDir,
       ext: 'md',
     }, fs)
-    expect(result.isOk()).toBe(true)
-    const output = await read('out.md')
+    const output = expectOk(result)
     expect(output).toContain('A(S)')
   })
 
@@ -179,16 +177,5 @@ describe('Integration: build pipeline', () => {
     expect(result._unsafeUnwrapErr().type).toBe('FileNotFound')
   })
 
-  it('creates output directory if it does not exist', async () => {
-    await write('entry.md', 'content')
-    const result = await build({
-      entryPath: join(tempDir, 'entry.md'),
-      outputPath: join(tempDir, 'deep', 'nested', 'out.md'),
-      contextSources: [],
-      cwd: tempDir,
-      ext: 'md',
-    }, fs)
-    expect(result.isOk()).toBe(true)
-    expect(await read('deep/nested/out.md')).toBe('content')
-  })
+
 })

@@ -10,7 +10,7 @@ import { resolveContext } from './resolve-context.js'
 
 export type BuildOptions = {
   readonly entryPath: string
-  readonly outputPath: string
+  readonly outputPath: string | undefined
   readonly contextSources: readonly ContextSource[]
   readonly cwd: string
   readonly ext: SupportedExtension
@@ -20,7 +20,7 @@ type BuildContext = Record<string, string>
 type FileGraph = ReadonlyMap<string, string>
 
 export const build = async (options: BuildOptions, fs: FileSystem): Promise<Result<string, WeftError>> => {
-  const { entryPath, outputPath, contextSources, cwd, ext } = options
+  const { entryPath, contextSources, cwd, ext } = options
 
   return new ResultAsync(resolveContext(contextSources, fs)).andThen((context: BuildContext) =>
     new ResultAsync(loadFileGraph(entryPath, cwd, { cwd, fs })).map((fileMap: FileGraph) => ({
@@ -33,5 +33,5 @@ export const build = async (options: BuildOptions, fs: FileSystem): Promise<Resu
       resolvedStr,
     }))
   ).andThen(({ context, resolvedStr }) => renderTemplate(renderWithMustache)(resolvedStr, context, ext))
-    .andThen(output => new ResultAsync(fs.writeFile(outputPath, output)).map(() => output)).then(res => res)
+    .then(res => res)
 }

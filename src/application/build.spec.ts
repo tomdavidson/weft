@@ -14,9 +14,8 @@ describe('build', () => {
       cwd: '/project',
       ext: 'md',
     }, fs)
-    expectOk(result)
-    const written = await fs.readFile('/project/out.md')
-    expect(written.isOk() && written.value).toBe('Hello world')
+    const content = expectOk(result)
+    expect(content).toBe('Hello world')
   })
 
   it('resolves transclusions then renders template variables', async () => {
@@ -31,9 +30,8 @@ describe('build', () => {
       cwd: '/project',
       ext: 'md',
     }, fs)
-    expectOk(result)
-    const written = await fs.readFile('/project/out.md')
-    expect(written.isOk() && written.value).toBe('Before Tom After')
+    const content = expectOk(result)
+    expect(content).toBe('Before Tom After')
   })
 
   it('resolves context from a JSON file', async () => {
@@ -48,9 +46,8 @@ describe('build', () => {
       cwd: '/project',
       ext: 'md',
     }, fs)
-    expectOk(result)
-    const written = await fs.readFile('/project/out.md')
-    expect(written.isOk() && written.value).toBe('Title: My Doc')
+    const content = expectOk(result)
+    expect(content).toBe('Title: My Doc')
   })
 
   it('propagates FileNotFound when entry file is missing', async () => {
@@ -105,9 +102,8 @@ describe('build', () => {
       cwd: '/project',
       ext: 'md',
     }, fs)
-    expectOk(result)
-    const written = await fs.readFile('/project/out.md')
-    expect(written.isOk() && written.value).toBe('Start (A deep A) End')
+    const content = expectOk(result)
+    expect(content).toBe('Start (A deep A) End')
   })
 
   it('applies JSON escaping for .json extension', async () => {
@@ -119,9 +115,8 @@ describe('build', () => {
       cwd: '/project',
       ext: 'json',
     }, fs)
-    expectOk(result)
-    const written = await fs.readFile('/project/out.json')
-    expect(written.isOk() && written.value).toBe('{"key": "line1\\nline2"}')
+    const content = expectOk(result)
+    expect(content).toBe('{"key": "line1\\nline2"}')
   })
 
   it('returns the rendered content string on success', async () => {
