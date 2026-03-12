@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { classifyContextSource, mergeContexts } from './context.js'
-import { toFilePath } from './types'
+import { toFilePath } from './types.js'
 import type { ContextSource } from './types.js'
 
 describe('classifyContextSource', () => {

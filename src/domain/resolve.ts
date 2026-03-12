@@ -1,7 +1,7 @@
 import { err, ok } from 'neverthrow'
 import type { Result } from 'neverthrow'
 import { dirname } from 'node:path'
-import { cycleDetected, fileNotFound, sectionNotFound } from '../domain/errors.js'
+import { cycleDetected, fileNotFound, sectionNotFound } from './errors.js'
 import { extractSection, parseTransclusionRefs } from './parse-transclusion.js'
 import { resolveRefPath } from './resolve-path.js'
 import type { TransclusionRef, WeftError } from './types.js'

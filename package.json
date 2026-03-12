@@ -1,22 +1,22 @@
 {
-  "name": "@zflow/weft",
-  "version": "1.0.0",
+  "name": "weft",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "bin": {
-    "weft": "./src/cli/index.ts"
+    "weft": "./dist/weft.mjs"
   },
   "scripts": {
     "check": "tsc --noEmit",
-    "build": "bun build src/cli/index.ts --compile --outfile weft",
-    "lint": "oxlint;  eslint",
+    "build": "bun build src/cli/index.ts --outfile dist/weft.mjs && sed -i '1i#!/usr/bin/env bun' dist/weft.mjs",
+    "prepublishOnly": "bun run build",
+    "lint": "oxlint; eslint",
     "lint:ox": "oxlint",
-    "lint:fp": "eslint -c eslint.config.mjs",
+    "lint:fp": "eslint",
     "lint:fix": "oxlint --fix; eslint --fix",
     "fmt": "dprint fmt",
     "fmt:check": "dprint check",
-    "refac": "bash refac.sh",
-    "ci": "date --rfc-3339=second; echo \"*** RUNNING LINTERS: ***\" && bun run lint; echo \"*** RUNNING TESTS: ***\" && bun test"
+    "test": "bun test"
   },
   "dependencies": {
     "mustache": "^4.2.0",

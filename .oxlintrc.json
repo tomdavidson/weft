@@ -9,13 +9,14 @@
     "node",
     "oxc"
   ],
+
   "options": {
     // Now that you installed tsgolint, keep this on.
     // Equivalent to CLI: --type-aware
-    "typeAware": true
+    "typeAware": true,
     // Optional (more expensive): TS compiler diagnostics.
     // If you want "tsc-like" feedback during lint, turn on.
-    // "typeCheck": true
+    "typeCheck": true
   },
   "categories": {
     // Maximize baseline coverage.
@@ -29,6 +30,7 @@
     "nursery": "off"
   },
   "rules": {
+  
     // ─────────────────────────────────────────────────────────────
     // STRUCTURE / COMPLEXITY
     // These look like formatting but enforce cognitive load limits.
