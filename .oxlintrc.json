@@ -30,7 +30,6 @@
     "nursery": "off"
   },
   "rules": {
-  
     // ─────────────────────────────────────────────────────────────
     // STRUCTURE / COMPLEXITY
     // These look like formatting but enforce cognitive load limits.

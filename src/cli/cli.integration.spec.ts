@@ -1,7 +1,7 @@
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
-import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises'
-import path from 'node:path'
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
+import path from 'node:path'
 
 describe('CLI: build pipeline', () => {
   let tmpDir: string

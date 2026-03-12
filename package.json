@@ -8,7 +8,7 @@
   },
   "scripts": {
     "check": "tsc --noEmit",
-    "build": "bun build src/cli/index.ts --outfile dist/weft.mjs && sed -i '1i#!/usr/bin/env bun' dist/weft.mjs",
+    "build": "bun build src/cli/index.ts --outfile dist/weft.mjs",
     "prepublishOnly": "bun run build",
     "lint": "oxlint; eslint",
     "lint:ox": "oxlint",

@@ -20,13 +20,11 @@ afterEach(async () => {
 
 const write = async (name: string, content: string) => writeFile(join(tempDir, name), content, 'utf-8')
 
-
 describe('Integration: build pipeline', () => {
   it('single file with no transclusions, no context', async () => {
     await write('entry.md', 'Hello world')
     const result = await build({
       entryPath: join(tempDir, 'entry.md'),
-      outputPath: join(tempDir, 'out.md'),
       contextSources: [],
       cwd: tempDir,
       ext: 'md',
@@ -39,7 +37,6 @@ describe('Integration: build pipeline', () => {
     await write('entry.md', 'Hello {{name}}, you are {{role}}.')
     const result = await build({
       entryPath: join(tempDir, 'entry.md'),
-      outputPath: join(tempDir, 'out.md'),
       contextSources: [{ type: 'inline', key: 'name', value: 'Tom' }, {
         type: 'inline',
         key: 'role',
@@ -57,7 +54,6 @@ describe('Integration: build pipeline', () => {
     await write('child.md', 'CHILD')
     const result = await build({
       entryPath: join(tempDir, 'root.md'),
-      outputPath: join(tempDir, 'out.md'),
       contextSources: [],
       cwd: tempDir,
       ext: 'md',
@@ -75,7 +71,6 @@ describe('Integration: build pipeline', () => {
     await write('body.md', 'Author: {{author}}')
     const result = await build({
       entryPath: join(tempDir, 'root.md'),
-      outputPath: join(tempDir, 'out.md'),
       contextSources: [{ type: 'inline', key: 'title', value: 'My Doc' }, {
         type: 'inline',
         key: 'author',
@@ -94,7 +89,6 @@ describe('Integration: build pipeline', () => {
     await write('ctx.json', JSON.stringify({ greeting: 'Hello', name: 'default' }))
     const result = await build({
       entryPath: join(tempDir, 'entry.md'),
-      outputPath: join(tempDir, 'out.md'),
       contextSources: [{ type: 'jsonFile', path: toFilePath(join(tempDir, 'ctx.json')) }, {
         type: 'inline',
         key: 'name',
@@ -112,7 +106,6 @@ describe('Integration: build pipeline', () => {
     await write('config.env', 'DB_HOST=localhost' + String.fromCharCode(10) + 'DB_PORT=5432')
     const result = await build({
       entryPath: join(tempDir, 'entry.md'),
-      outputPath: join(tempDir, 'out.md'),
       contextSources: [{ type: 'envFile', path: toFilePath(join(tempDir, 'config.env')) }],
       cwd: tempDir,
       ext: 'md',
@@ -127,7 +120,6 @@ describe('Integration: build pipeline', () => {
     await write('sub/part.md', 'from sub')
     const result = await build({
       entryPath: join(tempDir, 'root.md'),
-      outputPath: join(tempDir, 'out.md'),
       contextSources: [],
       cwd: tempDir,
       ext: 'md',
@@ -143,7 +135,6 @@ describe('Integration: build pipeline', () => {
     await write('shared.md', 'S')
     const result = await build({
       entryPath: join(tempDir, 'root.md'),
-      outputPath: join(tempDir, 'out.md'),
       contextSources: [],
       cwd: tempDir,
       ext: 'md',
@@ -155,7 +146,6 @@ describe('Integration: build pipeline', () => {
   it('returns FileNotFound for missing entry file', async () => {
     const result = await build({
       entryPath: join(tempDir, 'nope.md'),
-      outputPath: join(tempDir, 'out.md'),
       contextSources: [],
       cwd: tempDir,
       ext: 'md',
@@ -168,7 +158,6 @@ describe('Integration: build pipeline', () => {
     await write('root.md', '![[missing]]')
     const result = await build({
       entryPath: join(tempDir, 'root.md'),
-      outputPath: join(tempDir, 'out.md'),
       contextSources: [],
       cwd: tempDir,
       ext: 'md',
@@ -176,6 +165,4 @@ describe('Integration: build pipeline', () => {
     expect(result.isErr()).toBe(true)
     expect(result._unsafeUnwrapErr().type).toBe('FileNotFound')
   })
-
-
 })

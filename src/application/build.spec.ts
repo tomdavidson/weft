@@ -9,7 +9,6 @@ describe('build', () => {
     const fs = createFakeFileSystem({ '/project/entry.md': 'Hello world' })
     const result = await build({
       entryPath: '/project/entry.md',
-      outputPath: '/project/out.md',
       contextSources: [],
       cwd: '/project',
       ext: 'md',
@@ -25,7 +24,6 @@ describe('build', () => {
     })
     const result = await build({
       entryPath: '/project/entry.md',
-      outputPath: '/project/out.md',
       contextSources: [{ type: 'inline', key: 'name', value: 'Tom' }],
       cwd: '/project',
       ext: 'md',
@@ -41,7 +39,6 @@ describe('build', () => {
     })
     const result = await build({
       entryPath: '/project/entry.md',
-      outputPath: '/project/out.md',
       contextSources: [{ type: 'jsonFile', path: toFilePath('/project/ctx.json') }],
       cwd: '/project',
       ext: 'md',
@@ -54,7 +51,6 @@ describe('build', () => {
     const fs = createFakeFileSystem()
     const result = await build({
       entryPath: '/project/missing.md',
-      outputPath: '/project/out.md',
       contextSources: [],
       cwd: '/project',
       ext: 'md',
@@ -67,7 +63,6 @@ describe('build', () => {
     const fs = createFakeFileSystem({ '/project/entry.md': 'Hello', '/project/bad.json': '{broken' })
     const result = await build({
       entryPath: '/project/entry.md',
-      outputPath: '/project/out.md',
       contextSources: [{ type: 'jsonFile', path: toFilePath('/project/bad.json') }],
       cwd: '/project',
       ext: 'md',
@@ -80,7 +75,6 @@ describe('build', () => {
     const fs = createFakeFileSystem({ '/project/entry.md': '![[missing]]' })
     const result = await build({
       entryPath: '/project/entry.md',
-      outputPath: '/project/out.md',
       contextSources: [],
       cwd: '/project',
       ext: 'md',
@@ -97,7 +91,6 @@ describe('build', () => {
     })
     const result = await build({
       entryPath: '/project/root.md',
-      outputPath: '/project/out.md',
       contextSources: [{ type: 'inline', key: 'val', value: 'deep' }],
       cwd: '/project',
       ext: 'md',
@@ -110,7 +103,6 @@ describe('build', () => {
     const fs = createFakeFileSystem({ '/project/entry.json': '{"key": "{{val}}"}' })
     const result = await build({
       entryPath: '/project/entry.json',
-      outputPath: '/project/out.json',
       contextSources: [{ type: 'inline', key: 'val', value: 'line1\nline2' }],
       cwd: '/project',
       ext: 'json',
@@ -123,7 +115,6 @@ describe('build', () => {
     const fs = createFakeFileSystem({ '/project/entry.md': 'Result: {{x}}' })
     const result = await build({
       entryPath: '/project/entry.md',
-      outputPath: '/project/out.md',
       contextSources: [{ type: 'inline', key: 'x', value: '42' }],
       cwd: '/project',
       ext: 'md',

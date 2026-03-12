@@ -10,7 +10,6 @@ import { resolveContext } from './resolve-context.js'
 
 export type BuildOptions = {
   readonly entryPath: string
-  readonly outputPath: string | undefined
   readonly contextSources: readonly ContextSource[]
   readonly cwd: string
   readonly ext: SupportedExtension
@@ -32,6 +31,7 @@ export const build = async (options: BuildOptions, fs: FileSystem): Promise<Resu
       context,
       resolvedStr,
     }))
-  ).andThen(({ context, resolvedStr }) => renderTemplate(renderWithMustache)(resolvedStr, context, ext))
-    .then(res => res)
+  ).andThen(({ context, resolvedStr }) => renderTemplate(renderWithMustache)(resolvedStr, context, ext)).then(
+    res => res
+  )
 }
